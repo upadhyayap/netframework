@@ -51,11 +51,12 @@ jobs:
       run: |
         cd Application
         msbuild .\SampleWebApplication.sln
-    
+
     - name: Archive Application
-      uses: montudor/action-zip@v0.1.0
+      uses: papeloto/action-zip@v1
       with:
-        args: zip -qq -r ./buildartifacts/Application.zip ./Application/SampleWebApplication
+        files: ./Application/SampleWebApplication
+        dest: ./buildartifacts/Application.zip
 
     - name: Upload Application to Build Artifact
       continue-on-error: false
@@ -65,9 +66,10 @@ jobs:
         path: buildartifacts
 
     - name: Archive ArmTemplates
-      uses: montudor/action-zip@v0.1.0
+      uses: papeloto/action-zip@v1
       with:
-        args: zip -qq -r ./deploymenttemplates/ArmTemplates.zip ./ArmTemplates
+        files: ./ArmTemplates
+        dest: ./deploymenttemplates/ArmTemplates.zip
 
     - name: Upload Arm templates to Artifact
       continue-on-error: false
@@ -104,7 +106,7 @@ jobs:
     - name: unzipping arm artifact
       uses: montudor/action-zip@v0.1.0
       with:
-       args: unzip -qq ./deploymenttemplates/armtemplates.zip -d .
+       args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d .
 
     - name: Login to Azure
       uses: azure/login@v1
@@ -119,7 +121,7 @@ jobs:
       with:
         inlineScript: |
           az group create --name "$\{{ env.RESOURCEGROUPNAME \}}" --location "$\{{ env.LOCATION \}}"
-          az deployment group create --resource-group "$\{{ env.RESOURCEGROUPNAME \}}" --template-file ./armTemplates/windows-webapp-template.json --parameters webAppName="$\{{ env.AZURE_WEBAPP_NAME \}}" hostingPlanName="$\{{ env.HOSTINGPLANNAME \}}" appInsightsLocation="$\{{ env.APPINSIGHTLOCATION \}}" sku="$\{{ env.SKU \}}"
+          az deployment group create --resource-group "$\{{ env.RESOURCEGROUPNAME \}}" --template-file ./ArmTemplates/windows-webapp-template.json --parameters webAppName="$\{{ env.AZURE_WEBAPP_NAME \}}" hostingPlanName="$\{{ env.HOSTINGPLANNAME \}}" appInsightsLocation="$\{{ env.APPINSIGHTLOCATION \}}" sku="$\{{ env.SKU \}}"
 
     - name: 'Deploy web app'
       uses: azure/webapps-deploy@v2
