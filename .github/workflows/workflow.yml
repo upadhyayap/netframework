@@ -1,4 +1,4 @@
-name: Deploy ASP.NET MVC App to Azure Web App
+name: Build and Deploy ASP.NET MVC App to Azure Web App
 
 on:
   push:
@@ -107,8 +107,6 @@ jobs:
       uses: montudor/action-zip@v0.1.0
       with:
        args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d .
-
-    - name: list dirs
 
     - name: Login to Azure
       uses: azure/login@v1
