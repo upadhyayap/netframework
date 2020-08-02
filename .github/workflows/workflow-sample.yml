@@ -94,7 +94,7 @@ jobs:
     - name: unzipping build artifact
       uses: montudor/action-zip@v0.1.0
       with:
-       args: unzip -qq ./buildartifacts/Application.zip -d .
+       args: unzip -qq ./buildartifacts/Application.zip -d ./Application
 
     - name: Download an Arm template
       uses: actions/download-artifact@v2
@@ -106,7 +106,7 @@ jobs:
     - name: unzipping arm artifact
       uses: montudor/action-zip@v0.1.0
       with:
-       args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d .
+       args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d ./ArmTemplates
 
     - name: list dirs
       run: |
