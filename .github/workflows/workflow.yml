@@ -13,7 +13,7 @@ on:
 #
 # 2. Change these variables for your configuration:
 env:
-  AZURE_WEBAPP_NAME: netstarter    # set this to your application's name
+  AZURE_WEBAPP_NAME: netframeworktest4    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'   # set this to the path to your web app project, defaults to the repository root
   NUGET_VERSION: '5.0.0'           # set this to the dot net version to use
   RESOURCEGROUPNAME: "netfrstarter-rg"
@@ -90,24 +90,18 @@ jobs:
     - name: Setup .NET sdk
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.302
-        
-    - name: dasd
-      run: 
+        dotnet-version: 3.1.302 
+
+    - name: update web app url in Run Settings
       shell: powershell
-
-    - name: update Run Settings file
       run: |
-        
-
-    
-    - name: And then we test it
-      run: | 
-        cd Application\SampleWebApplication.UnitTests
-        dotnet test bin\Release\*.UnitTests.dll -webAppUrl
+        cd Application\SampleWebApplication.FunctionalTests
+        [xml]$doc = Get-Content functionalTests.runsettings
+        $doc.RunSettings.TestRunParameters.ChildNodes.Item(0).value = 'https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/'
+        $doc.Save("$(pwd)/functionalTests.runsettings")
 
     # Run functional tests
-    - name: set up test environment and run tests
+    - name: Run tests
       continue-on-error: false
       run: |
         pushd .
@@ -117,6 +111,6 @@ jobs:
         Expand-Archive -Path chromedriver.zip
         Remove-Item chromedriver.zip
         popd
-        cd Tests\build\libs
-        java -DwebAppUrl="https://$\{{ env.AZURE_WEBAPP_NAME \}}.azurewebsites.net/" -DChromeWebDriver="$env:temp/chromedriver" -cp SampleWebAppFunctionalTests-jar-with-dependencies.jar org.junit.platform.console.ConsoleLauncher --class-path SampleWebAppFunctionalTests-jar-with-dependencies.jar --scan-class-path --reports-dir reports --include-engine junit-vintage
+        cd Application\SampleWebApplication.FunctionalTests
+        dotnet test bin\Release\*.FunctionalTests.dll -s functionalTests.runsettings
   
