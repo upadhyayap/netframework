@@ -50,7 +50,7 @@ jobs:
     - name: Run MSBuild
       run: |
         cd Application
-        msbuild .\SampleWebApplication.sln
+        msbuild .\SampleWebApplication.sln -p:Configuration=Release
 
     - name: Setup .NET sdk
       uses: actions/setup-dotnet@v1
@@ -60,4 +60,4 @@ jobs:
     - name: And then we test it
       run: | 
         cd Application\SampleWebApplication.UnitTests
-        dotnet test bin\debug\*.UnitTests.dll --verbosity normal
+        dotnet test bin\Release\*.UnitTests.dll --verbosity normal
