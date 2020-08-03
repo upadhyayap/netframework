@@ -61,3 +61,58 @@ jobs:
       run: | 
         cd Application\SampleWebApplication.UnitTests
         dotnet test bin\Release\*.UnitTests.dll --verbosity normal
+
+  FunctionalTests:
+    name: Run Functional tests
+    runs-on: windows-latest
+    needs: build
+    steps:
+        # checkout the repo
+    - uses: actions/checkout@master
+
+    - name: Install Nuget
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: ${{ env.NUGET_VERSION}}
+    - name: NuGet to restore dependencies as well as project-specific tools that are specified in the project file
+      run: |
+        cd Application
+        nuget restore
+  
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.0
+    
+    - name: Run MSBuild
+      run: |
+        cd Application
+        msbuild .\SampleWebApplication.sln -p:Configuration=Release
+
+    - name: Setup .NET sdk
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.302
+
+    - name: update Run Settings file
+      run: |
+        
+
+    
+    - name: And then we test it
+      run: | 
+        cd Application\SampleWebApplication.UnitTests
+        dotnet test bin\Release\*.UnitTests.dll -webAppUrl
+
+    # Run functional tests
+    - name: set up test environment and run tests
+      continue-on-error: false
+      run: |
+        pushd .
+        cd $env:temp
+        $Path = $env:TEMP; $Installer = "chrome_installer.exe"; Invoke-WebRequest "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $Path$Installer; Start-Process -FilePath $Path$Installer -Args "/silent /install" -Verb RunAs -Wait; Remove-Item $Path$Installer
+        Invoke-WebRequest https://chromedriver.storage.googleapis.com/83.0.4103.39/chromedriver_win32.zip -outFile chromedriver.zip
+        Expand-Archive -Path chromedriver.zip
+        Remove-Item chromedriver.zip
+        popd
+        cd Tests\build\libs
+        java -DwebAppUrl="https://$\{{ env.AZURE_WEBAPP_NAME \}}.azurewebsites.net/" -DChromeWebDriver="$env:temp/chromedriver" -cp SampleWebAppFunctionalTests-jar-with-dependencies.jar org.junit.platform.console.ConsoleLauncher --class-path SampleWebAppFunctionalTests-jar-with-dependencies.jar --scan-class-path --reports-dir reports --include-engine junit-vintage
+  
