@@ -3,7 +3,7 @@ name: Build and Deploy ASP.NET MVC App to Azure Web App
 on:
   push:
     branches:
-      - master
+      - test
 
 # CONFIGURATION
 # For help, go to https://github.com/Azure/Actions

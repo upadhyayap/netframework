@@ -3,7 +3,7 @@ name: Build and Deploy ASP.NET MVC App to Azure Web App
 on:
   push:
     branches:
-      - test
+      - master
 
 # CONFIGURATION
 # For help, go to https://github.com/Azure/Actions
@@ -52,79 +52,12 @@ jobs:
         cd Application
         msbuild .\SampleWebApplication.sln
 
-    - name: Archive Application
-      uses: papeloto/action-zip@v1
+    - name: Setup .NET sdk
+      uses: actions/setup-dotnet@v1
       with:
-        files: ./Application/SampleWebApplication
-        dest: ./buildartifacts/Application.zip
-
-    - name: Upload Application to Build Artifact
-      continue-on-error: false
-      uses: actions/upload-artifact@v2
-      with:
-        name: buildartifacts
-        path: buildartifacts
-
-    - name: Archive ArmTemplates
-      uses: papeloto/action-zip@v1
-      with:
-        files: ./ArmTemplates
-        dest: ./deploymenttemplates/ArmTemplates.zip
-
-    - name: Upload Arm templates to Artifact
-      continue-on-error: false
-      uses: actions/upload-artifact@v2
-      with:
-        name: deploymenttemplates
-        path: deploymenttemplates
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v2
-      continue-on-error: false
-      with:
-        name: buildartifacts
-        path: buildartifacts
-
-    - name: unzipping build artifact
-      uses: montudor/action-zip@v0.1.0
-      with:
-       args: unzip -qq ./buildartifacts/Application.zip -d .
-
-    - name: Download an Arm template
-      uses: actions/download-artifact@v2
-      continue-on-error: false
-      with:
-        name: deploymenttemplates
-        path: deploymenttemplates
-
-    - name: unzipping arm artifact
-      uses: montudor/action-zip@v0.1.0
-      with:
-       args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d .
-
-    - name: Login to Azure
-      uses: azure/login@v1
-      continue-on-error: false
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        dotnet-version: 3.1.302
     
-    # Deploy Arm template
-    - name: Deploy ARM Template
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-        inlineScript: |
-          az group create --name "${{ env.RESOURCEGROUPNAME }}" --location "${{ env.LOCATION }}"
-          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/windows-webapp-template.json --parameters webAppName="${{ env.AZURE_WEBAPP_NAME }}" hostingPlanName="${{ env.HOSTINGPLANNAME }}" appInsightsLocation="${{ env.APPINSIGHTLOCATION }}" sku="${{ env.SKU }}"
-
-    - name: 'Deploy web app'
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
-        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/Application'
+    - name: And then we test it
+      run: | 
+        cd Application\SampleWebApplication.UnitTests
+        dotnet test bin\debug\*.UnitTests.dll --verbosity normal
